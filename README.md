@@ -36,3 +36,5 @@ This folder contains all the files required to make a word document of the artic
 3. Template. Contains the template for the styles used to render the word document.
 
 4. international-journal-of-digital-earth. Is the file that indicates how the references should be formatted.
+
+5. Trackdown script to update files in Google Drive. This is a package that allows uploading an md and docx documents to drive.
