@@ -1,3 +1,4 @@
+library(magick)
 library(cowplot)
 library(gridExtra)
 library(tmap)
@@ -204,6 +205,13 @@ save_plot(exp_plot,
           dpi = 300,
           filename = "Map/Map1.jpeg")
 
+# Trim empty spaces
+map1 <- image_read("Map/Map1.jpeg")
+map1 <- image_trim(map1)
+map1 <- image_border(map1, "#FFFFFF", "20x20")
+image_write(map1, 
+            path = "Map/Map1.jpeg", 
+            format = "jpeg")
 # Map2----
 library(cowplot)
 library(gridExtra)
@@ -345,3 +353,11 @@ save_plot(exp_plot,
           units = "cm",
           dpi = 300,
           filename = "Map/Map2.jpeg")
+
+# Trim empty spaces
+map2 <- image_read("Map/Map2.jpeg")
+map2 <- image_trim(map2)
+map2 <- image_border(map2, "#FFFFFF", "20x20")
+image_write(map2, 
+            path = "Map/Map2.jpeg", 
+            format = "jpeg")
