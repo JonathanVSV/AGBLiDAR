@@ -96,33 +96,6 @@ err_df <- map(unique(df_agb_long$Id.Sitio), function(x){
   setNames(unique(df_agb_long$Id.Sitio)) |>
   bind_rows(.id = "Id.Sitio")
 
-# # Salen warnings por NA en Diámetros
-# colnames(df_agb) <- c("id", paste0(("AGB"), seq(1,9)))
-# 
-# df2 <- df2 |>
-#   left_join(df_agb, "id")
-# 
-# # AGB
-# AGB <- df2 |>
-#   select(id, Id.Sitio, starts_with("AGB")) |>
-#   pivot_longer(cols = -c(id, Id.Sitio), 
-#                names_to = c("AGB")) |>
-#   drop_na(value) |>
-#   group_by(Id.Sitio) |>
-#   summarise(AGB_sum = sum(value))
-
-# # Listado por Id.Sitio
-# df_exp <- df |>
-#   select(Id.Sitio, Parc.dim) |>
-#   group_by(Id.Sitio, Parc.dim) |>
-#   slice_head(n=1) |>
-#   left_join(AGB, by = "Id.Sitio") |>
-#   select(Id.Sitio, Parc.dim, AGB_sum) |>
-#   drop_na(AGB_sum) |>
-#   arrange(AGB_sum) |>
-#   mutate(across(AGB_sum, ~.x*10000/`Parc.dim`)) |>
-#   arrange(AGB_sum)
-
 # Con errores
 df_exp <- df |>
   select(Id.Sitio, Parc.dim) |>

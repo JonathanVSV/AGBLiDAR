@@ -8,15 +8,15 @@ library(terra)
 library(ggpubr)
 
 # Map1----
-splots <- st_read("D:/Drive/Jonathan_trabaggio/Doctorado/R/CometaLidar/Shape/27_Parcelas_rectangulos.shp") |>
+splots <- st_read("Shape/27_Parcelas_rectangulos.shp") |>
   dplyr::filter(!parcela %in% c(9,26)) |>
   st_centroid()
-cometa <- st_read("D:/Drive/Jonathan_trabaggio/Doctorado/R/CometaLidar/Shape/Cometa.gpkg") |>
+cometa <- st_read("Shape/Cometa.gpkg") |>
   st_transform(3857) |>
   mutate(name = "Cometa\nLagoon") 
-World <- st_read("D:/Drive/Jonathan_trabaggio/Doctorado/GeoInfo/LimitesIntl/WorldWithoutMX.shp") |>
+World <- st_read("WorldWithoutMX.shp") |>
   st_transform(3857)
-Mx <- st_read("D:/Drive/Jonathan_trabaggio/Doctorado/GeoInfo/LimitesIntl/MX_inegi.shp")|>
+Mx <- st_read("LimitesIntl/MX_inegi.shp")|>
   st_transform(3857)
 
 roi <- splots |>
@@ -32,14 +32,14 @@ splots <- splots |>
 splots2 <- splots |>
   st_buffer(500)
 
-# Bajar mapa base
+# Download base map
 # base_im <- basemap_geotif(roi,
 #                map_service = "esri",
 #                map_type = "world_imagery",
-#                map_dir = "D:/Drive/Jonathan_trabaggio/Doctorado/R/CometaLiDARrevML/Basemap")
+#                map_dir = "Basemap")
 
-im1 <- rast("D:/Drive/Jonathan_trabaggio/Doctorado/R/CometaLiDARrevML/Basemap/basemap_20240723170715.357565.tif")
-im2 <- rast("D:/Drive/Jonathan_trabaggio/Doctorado/R/CometaLiDARrevML/Basemap/basemap_20240723172752.482039.tif")
+im1 <- rast("Basemap/basemap_20240723170715.357565.tif")
+im2 <- rast("Basemap/basemap_20240723172752.482039.tif")
 
 main_map <- tm_shape(im2,
          bbox = splots2 |>

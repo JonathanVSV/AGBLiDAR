@@ -1,9 +1,9 @@
 library(tidyverse)
 library(tidymodels)
-library(randomForest)
 library(yardstick)
-library(glue)
 library(vip)
+library(glue)
+library(xgboost)
 library(furrr)
 
 tidymodels_prefer()
@@ -34,28 +34,24 @@ quitar = indep_vars
 removers = df
 aux <- 1
 sub_df<-df
-
-# while(nrow(removers)>=1){
 # 
+# while(nrow(removers)>=1){
+#   
 #   removers <- sub_df |>
 #     select(-all_of(quitar[1:aux])) |>
 #     corrr::correlate() |>
 #     pivot_longer(cols = -term) |>
-#     filter(value >= 0.8)
-# 
-#   quitar <- removers |>
+#     filter(value >= 0.8) 
+#   
+#   quitar <- removers |> 
 #     distinct(term) |>
 #     pull(term)
-# 
+#   
 #   aux <- aux+1
 # }
 
-# df <- df |>
-#   select(-all_of(quitar))
-
-# write.csv(df ,
-#           "Results/df_AGB.csv",
-#           row.names = FALSE)
+df <- df |>
+  select(-all_of(quitar))
 
 df <- read.csv("Results/df_AGB.csv")
 
@@ -68,14 +64,13 @@ var_combinations <- combn(indep_vars,
                           simplify = FALSE) 
 
 # CV training----
-# Función para evaluar qué modelo es mejor solo con cv
-
-fit_lm <- function(df_training, df_cv, vars){
+fit_xgb <- function(df_training, df_cv, vars){
   
   # Specify algorithm to be used, engine and mode (classification or regression)
-  lm_model <- linear_reg() |>
-    set_engine("glm") |>
-    set_mode("regression")
+  xgb_model <- boost_tree() |> 
+    set_mode("regression") |>
+    set_engine("xgboost")
+    
   
   formula_1 <- as.formula(paste(dep_var," ~ ", paste(vars, collapse = " + "))) 
   
@@ -85,33 +80,21 @@ fit_lm <- function(df_training, df_cv, vars){
   #           threshold = 0.8) |>
   # step_dummy(all_nominal(), -all_outcomes()) 
   
-  fit_lm <- workflow() |> 
-    add_model(lm_model) |>
+  fit_xgb <- workflow() |> 
+    add_model(xgb_model) |>
     add_recipe(df_recipe) |>
     fit_resamples(resamples = df_cv,
-                  control = control_resamples(save_pred = TRUE, 
-                                              save_workflow = TRUE))
+                  control = control_resamples(save_pred = TRUE))
   
-  # resuls_cv <- fit_lm |>
+  # resuls_cv <- fit_xgb |>
   #   collect_predictions() |>
   #   rename("actual" = "AGB",
   #          "predicted" = ".pred")
   
   # Esto hace lo mismo que
-  resul_metrics <- fit_lm |>
+  resul_metrics <- fit_xgb |>
     collect_metrics()
   
-  # Esto
-  # fit_lm |>
-  #   select(id, id2, .metrics) |>
-  #   unnest(.metrics) |>
-  #   group_by(.metric) |>
-  #   summarise(mean = mean(.estimate))
-  # 
-  # fit_lm <- fit_lm |>
-  #   fit_best()
-  
-  # 
   # return list
   temp <- list(vars, 
                resul_metrics)
@@ -139,11 +122,11 @@ df_cv <- vfold_cv(df_training,
                   repeats = 2)
 
 # Parallel training----
-# Define the number of nodes to be used for the training procedure. I recommend using 1 less than the total number of cores available in your computer
+# Define the number of nodes to be used for the training procedure. I recommend using 1 less than the total number of cor
 set.seed(5)
 resuls <- furrr::future_map(var_combinations, 
                             .f = function(x) {
-                              fit_lm(df_training, df_cv, x)
+                              fit_xgb(df_training, df_cv, x)
                             },
                             .options = furrr_options(packages = c("tidymodels", 
                                                                   "vip", 
@@ -157,10 +140,11 @@ resuls <- furrr::future_map(var_combinations,
 
 # Best model----
 # Ya teniendo el mejor modelo, entrenarlo para sacar sus métricas de evaluación
-# saveRDS(resuls,
-#         paste0("Results/lm_models.rds"))
 
-resuls <- readRDS(paste0("Results/lm_models.rds"))
+# saveRDS(resuls,
+#         paste0("Results/xgb_models.rds"))
+
+resuls <- readRDS(paste0("Results/xgb_models.rds"))
 
 eval_cv <- map(resuls, ~.x |>
                  pluck("resul_metrics")) |>
@@ -174,91 +158,98 @@ maxrsq <- eval_cv |>
   filter(.metric == "rsq") |>
   slice_max(mean, n = 1)
 
-best_lm <- eval_cv |>
+best_xgb <- eval_cv |>
   filter((.metric == "rmse" & mean == minrmse$mean))
 
-id_lm <- best_lm  |>
+id_xgb <- best_xgb  |>
   pull(id)
 
 # Entrenar
 
 # Sacar vars
-vars <- resuls[[as.numeric(id_lm)]]$pred_vars
+vars <- resuls[[as.numeric(id_xgb)]]$pred_vars
 
 # Specify algorithm to be used, engine and mode (classification or regression)
 set.seed(1)
-lm_model <- linear_reg() |>
-  set_engine("glm") |>
-  set_mode("regression")
+xgb_model <- boost_tree() |> 
+  set_mode("regression") |>
+  set_engine("xgboost")
 
 formula_1 <- as.formula(paste(dep_var," ~ ", paste(vars, collapse = " + "))) 
 
-
-df_recipe <- recipe(formula_1,
-                    data = df_training)
+df_recipe <- recipe(formula_1, 
+                    data = df_training) 
 
 # Entrenar sobre training y evaluar sobre test
-best_lm_pv <- workflow() |> 
-  add_model(lm_model) |>
+best_xgb_fv <- workflow() |> 
+  add_model(xgb_model) |>
   add_recipe(df_recipe) 
 
 # Hyperparams tuning----
 # set.seed(15)
-# lm_grid <- grid_latin_hypercube(
-#   mtry(range = c(1,2),
-#        trans = NULL),
-#   trees(range = c(500,2000),
-#         trans = NULL),
-#   size = 80)
+# xgb_grid <- grid_latin_hypercube(
+#   tree_depth(range = c(2,5)),
+#   mtry(range = c(1, 2)),
+#   trees(range = c(100,500)),
+#   min_n(range = c(3,5)),
+#   learn_rate(range = c(-5,-4)),
+#   size = 80
+# )
 # 
-# lm_model <- rand_forest(
-#   mtry = tune(),
-#   trees = tune()
+# xgb_model <- boost_tree(
+#   tree_depth = tune(),
+#   # loss_reduction = tune(),                    ## first three: model complexity
+#   mtry = tune(),  
+#   trees = tune(),
+#         ## randomness
+#   min_n = tune(),
+#   learn_rate = tune()
 # ) |>
 #   set_mode("regression") |>
-#   set_engine("randomForest",
-#              num.threads = 7)
+#   set_engine("xgboost")
 # 
-# lm_tune <- workflow() |>
-#   add_model(lm_model) |>
+# xgb_tune <- workflow() |>
+#   add_model(xgb_model) |>
 #   add_recipe(df_recipe)
 # 
 # doParallel::registerDoParallel(cores = 7)
 # 
 # set.seed(123)
 # tune_res <-
-#   lm_tune %>%
+#   xgb_tune %>%
 #   tune_grid(
 #     resamples = df_cv,
-#     grid = lm_grid,
+#     grid = xgb_grid,
 #     metrics = metric_set(rmse)
 #   )
 # 
 # # parallel::stopCluster()
 # 
 # # finalize model set up
-# final_lm <- lm_tune %>%
+# final_xgb <- xgb_tune %>%
 #   finalize_workflow(
-#     show_best(x = tune_res, metric = "rmse", n = 1)
+#     show_best(x = tune_res,
+#               metric = "rmse",
+#               n = 1)
 #   )
 # 
-# fit_lm <- final_lm |>
+# fit_xgb <- final_xgb |>
 #   fit(data = df_training)
 
 # Evaluación final----
 # Evaluar
 
-fit_lm <- best_lm_pv |>
+fit_xgb <- best_xgb_fv |>
   fit(data = df_training)
 
 # Get actual and predicted
 resuls_test <- tibble(actual = df_test |>
                         pull(dep_var),
-                      predicted = predict(fit_lm, df_test) |>
+                      predicted = predict(fit_xgb, df_test) |>
                         pull(.pred))
 resuls_train <- tibble(actual = df_training |>
                          pull(dep_var),
-                       predicted = predict(fit_lm, df_training) |>
+                       predicted = predict(fit_xgb, df_training) |>
                          pull(.pred))
 
 # Calculate RMSE
@@ -283,13 +274,13 @@ relrmse_test <- resuls_test |>
   summarise(rRMSE = ehaGoF::gofRRMSE(actual, predicted))
 
 # Variable of importance as table
-df_varimp <- vip::vi(fit_lm|>
+df_varimp <- vip::vi(fit_xgb|>
                        # Extract model from parsnip
                        extract_fit_parsnip(),
                      scale = TRUE,
                      decreasing = TRUE)
 
-exp_df_lm <- list(model = fit_lm,
+exp_df_xgb <- list(model = fit_xgb,
                   rmse_train = rmse_train,
                   r2_train = r2_train,
                   relrmse_train = relrmse_train,
@@ -297,46 +288,8 @@ exp_df_lm <- list(model = fit_lm,
                   r2_test = r2_test,
                   relrmse_test = relrmse_test,
                   df_varimp = df_varimp,
-                  cv_resul = best_lm,
+                  cv_resul = best_xgb,
                   df_test = resuls_test,
                   df_train = resuls_train)
 
-saveRDS(exp_df_lm, paste0("Results/Lista_bestmodel_lm_24.rds"))
-
-# ## Lo de antes-----
-# # RMSE test
-# rmse <- resuls |>
-#   map(,.f = ~ .x |> pluck("AGB_rmse_cv")) |>
-#   bind_rows(.id = "id") |>
-#   arrange(.estimate) |>
-#   slice_head(n = 1)
-# rmse
-# 
-# # R2 training
-# r2 <- resuls |>
-#   map(,.f = ~ .x |> pluck("AGB_r2")) |>
-#   bind_rows(.id = "id") |>
-#   filter(id == as.numeric(rmse$id)) 
-# r2
-# 
-# resuls |> 
-#   pluck(as.numeric(rmse$id)) |>
-#   pluck("AGB_valspred") |>
-#   ggplot(aes(x = actual, 
-#              y = predicted)) +
-#   geom_point() +
-#   geom_abline(slope = 1, intercept = 0)
-# 
-# model <- resuls |>
-#   pluck(as.numeric(rmse$id)) 
-# saveRDS(model, "Results/Lista_bestmodel24.rds")
-# 
-# # Evaluate best model
-# model <- readRDS("Results/Lista_bestmodel.rds")
-# 
-# model$AGB_valspred |>
-#   ggplot(aes(x = actual,
-#              y = predicted)) +
-#   geom_point() +
-#   geom_abline(slope = 1, intercept = 0) +
-#   cowplot::theme_cowplot()
+saveRDS(exp_df_xgb, paste0("Results/Lista_bestmodel_xgb_24.rds"))

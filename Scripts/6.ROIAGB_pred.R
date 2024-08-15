@@ -37,9 +37,9 @@ writeRaster(pred_im,
 # Bootstrap split----
 
 # Gerar intervalos de confianza
-df <- read.csv(paste0("D:/Drive/Jonathan_trabaggio/Doctorado/R/CometaLiDARrevML","/Results/df_AGB.csv"))
-df_compl <- read.csv(paste0("D:/Drive/Jonathan_trabaggio/Doctorado/R/CometaLiDARrevML","/Data/BD_Joni_lidR_24.csv"))
-model_rf <- readRDS(paste0("D:/Drive/Jonathan_trabaggio/Doctorado/R/CometaLiDARrevML","/Results/Lista_bestmodel_rf_24.rds"))
+df <- read.csv(paste0("/Results/df_AGB.csv"))
+df_compl <- read.csv(paste0("/Data/BD_Joni_lidR_24.csv"))
+model_rf <- readRDS(paste0("/Results/Lista_bestmodel_rf_24.rds"))
 
 set.seed(27)
 boots <- bootstraps(df, 

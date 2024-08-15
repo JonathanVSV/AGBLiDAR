@@ -3,9 +3,9 @@ library(tidymodels)
 
 
 # Gerar intervalos de confianza
-df <- read.csv(paste0("D:/Drive/Jonathan_trabaggio/Doctorado/R/CometaLiDARrevML","/Results/df_AGB.csv"))
-df_compl <- read.csv(paste0("D:/Drive/Jonathan_trabaggio/Doctorado/R/CometaLiDARrevML","/Data/BD_Joni_lidR_24.csv"))
-model_rf <- readRDS(paste0("D:/Drive/Jonathan_trabaggio/Doctorado/R/CometaLiDARrevML","/Results/Lista_bestmodel_rf_24.rds"))
+df <- read.csv(paste0("/Results/df_AGB.csv"))
+df_compl <- read.csv(paste0("/Data/BD_Joni_lidR_24.csv"))
+model_rf <- readRDS(paste0("/Results/Lista_bestmodel_rf_24.rds"))
 
 # Bootstrap split----
 set.seed(27)
@@ -54,28 +54,3 @@ icpred |>
 # De todo el modelos
 percentile_intervals <- int_pctl(boot_models)
 percentile_intervals
-
-
-# # Conformal split ----
-# # Por el número de datos no alcanza a tener 90 % de CI, pero podemos sacar unos con 0.7
-# 
-# # Intervalo de confianza constante
-# 
-# df_con <- int_conformal_split(resuls[[1]]$AGB_model, df_test)
-# 
-# test_split_res <- predict(df_con, df_test, level = 0.7) %>% 
-#   bind_cols(df_test)
-# 
-# # Intervalo de confianza variables
-# 
-# quant_int <- int_conformal_quantile(
-#   resuls[[1]]$AGB_model, 
-#   train_data = df_training,
-#   cal_data = df_test, 
-#   level = 0.70,
-#   ntree = 2000)
-# 
-# test_quant_res <- predict(quant_int, df_test) |>
-#   rowwise() |>
-#   mutate(cvper = max(c(abs(.pred - .pred_lower), 
-#                   abs(.pred - .pred_upper))) / .pred)

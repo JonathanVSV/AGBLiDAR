@@ -1,4 +1,4 @@
-# CometaLiDAR
+# AGBLiDAR
 
 This repo contains the scripts to model AGB using LiDAR data and write its scientific article, all made in R.
 

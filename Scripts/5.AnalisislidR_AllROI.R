@@ -8,7 +8,7 @@ library (dplyr)
 library(rgl)
 
 #Load files
-archivos<-list.files("D:/Drive/Jonathan_trabaggio/Doctorado/R/CometaLidar/Cometa",pattern="*.las",full.names=T)
+archivos<-list.files("CometaLidar/",pattern="*.las",full.names=T)
 set_lidr_threads(11) 
 archivos <- archivos
 # data.table::setDTthreads(3) # for cran only
