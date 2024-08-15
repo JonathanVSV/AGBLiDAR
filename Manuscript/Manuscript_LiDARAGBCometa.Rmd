@@ -1,6 +1,6 @@
 ---
-title: "Modeling mangrove aboveground biomass using LiDAR derived metrics"
-author: "Jonathan V. Solórzano, Candelario Peralta Carreta, J. Alberto Gallardo Cruz"
+title: "Title"
+author: "Authors"
 date: "`r Sys.Date()`"
 output: 
   word_document:
@@ -37,15 +37,6 @@ library(flextable)
 library(magick)
 library(grid)
 
-# Cargar datos de mejor modelo
-df <- read.csv(paste0("D:/Drive/Jonathan_trabaggio/Doctorado/R/CometaLiDARrevML","/Results/df_AGB.csv"))
-df_compl <- read.csv(paste0("D:/Drive/Jonathan_trabaggio/Doctorado/R/CometaLiDARrevML","/Data/BD_Joni_lidR_24.csv"))
-df_boots <- read.csv(paste0("D:/Drive/Jonathan_trabaggio/Doctorado/R/CometaLiDARrevML","/Results/IC_bootstrap.csv"))
-
-model_rf <- readRDS(paste0("D:/Drive/Jonathan_trabaggio/Doctorado/R/CometaLiDARrevML","/Results/Lista_bestmodel_rf_24.rds"))
-model_xgb <- readRDS(paste0("D:/Drive/Jonathan_trabaggio/Doctorado/R/CometaLiDARrevML","/Results/Lista_bestmodel_xgb_24.rds"))
-model_lm <- readRDS(paste0("D:/Drive/Jonathan_trabaggio/Doctorado/R/CometaLiDARrevML","/Results/Lista_bestmodel_lm_24.rds"))
-
 # Flextable options
 set_flextable_defaults(
   font.family = "Times New Roman",
@@ -80,24 +71,13 @@ table_f = local({
 
 # Introduction
 
-Mangroves and Tropical Swamp Forests are tropical forests that occur in
-waterlogged conditions and consist of some of the world's largest Carbon
-sinks [@Donato2011; @Alongi2014]. Both forests can be found in permanent
-or seasonal flooding regimes, although mangroves usually can be found
-under brackish conditions, while tropical swamp forests, under
-freshwater regimes [@Lugo1990; @Ainslie2002]. These forests sequester
-large amounts of Carbon both in the below-ground and above-ground
-components; however, the latter is usually easier to study with field
-sampling techniques and remote sensing [@Kauffman2016; @Sjögersten2014].
-In addition, these forests provide other key ecosystem services such as
-providing the habitat for fish nurseries and mitigate storm intensity
-[@Hutchison2014; @Donato2011; @Murdiyarso2015].
-
+Text and citations [@Lugo1990; @Ainslie2002]. 
 
 # Methods
 
 ## Study site
 
+Figure from file
 
 ```{r fig1, echo= FALSE, warning=FALSE, message = FALSE,fig.width=16, fig.height=10, fig.cap = figure_f("Location of the study site and sampled plots")}
 #| crop: true
@@ -109,39 +89,19 @@ img |>
 
 ## Data
 
-### Sampling method
-
-### Biomass calculations
-
-Above-ground biomass for each tree was calculated using the following
-@eq:eqn1, developed for tropical forests [@Chaveetal2014]:
+Equations and cross reference
+@eq:eqn1:
 
 $$AGB = 0.0673( \rho DBH^2H)^{0.976}$${#eq:eqn1}
 
-where $\rho$ is the species mean wood density, extracted from the global
-wood density database [@Zanneetal2009], $DBH$ stands for DBH and $H$,
-individual height. The mean and standard deviation of each species' wood
-density was calculated using global data and its taxonomic identity.The wood density of the remaining four morphospecies (n = 1 each) was assumed to be the average of the wood densities of the
-other species found in the same plot, following recommendations by
-[@Chaveetal2014]. Once the AGB for each tree was obtained, the plot's
-AGB was calculated as the sum of all the trees' AGB and extrapolated to
-1 ha. All the aboveground biomass and $\rho$ calculations were done
-using BIOMASS package [@RejouMechainetal2017] in R 4.4.1 [@R].
-
-
-### LiDAR data
-
+in line equations or terms $\rho$ 
 
 # Results
 
-## Field data
+inline code
+`r round(mean(df$AGB), 2)` Mg/ha.
 
-The AGB data of the Mangrove and TSF plots showed a mean AGB value of
-`r round(mean(df$AGB), 2)` Mg/ha with a standard deviation =
-`r round(sd(df$AGB), 2)` Mg/ha. In turn, the range of AGB values was min
-= `r round(min(df$AGB),2)` Mg/ha and max = `r round(max(df$AGB),2)`
-Mg/ha. The uncertainty of each plot was similar among the plots (Fig.
-2).
+Example of table with flextable
 
 ```{r tablefield, echo= FALSE}
 df_compl |>
@@ -160,6 +120,8 @@ df_compl |>
   ) %>%
   set_table_properties(layout = "autofit")
 ```
+
+Example of figure created directly in the file.
 
 ```{r fig2, echo= FALSE, warning=FALSE, message = FALSE,fig.width=16, fig.height=10, fig.cap = figure_f("AGB and its uncertainty in the sampled plots.")}
 #| crop: true
@@ -188,21 +150,6 @@ df_compl |>
     axis.text = element_text(size=20, colour="black", angle = 90, hjust = 1, vjust = 0.5), 
     axis.title = element_text(size=20, colour="black", face = "bold"), axis.line = element_line(colour = "black"))
 ```
-
-## Model
-
-The model that achieved the lowest error on the test set was the random
-forest one ($RMSE$ = `r round(model_rf$rmse_test$.estimate, 2)`, $rRMSE$
-= `r round(model_rf$relrmse_test$rRMSE, 2)` %, $R^2$ =
-`r round(model_rf$r2_test$.estimate, 2)`), followed by the linear
-regression ($RMSE$ = `r round(model_lm$rmse_test$.estimate, 2)`, $rRMSE$
-= `r round(model_lm$relrmse_test$rRMSE, 2)` %, $R^2$ =
-`r round(model_lm$r2_test$.estimate, 2)`) and XGBoost ($RMSE$ =
-`r round(model_xgb$rmse_test$.estimate, 2)`, $rRMSE$ =
-`r round(model_xgb$relrmse_test$rRMSE, 2)` %, $R^2$ =
-`r round(model_xgb$r2_test$.estimate, 2)`; Table 2, Fig. 3). All the
-models achieved a small error on the training set, while they differed
-mostly in their performance on the test set (Table 1, Fig. 3).
 
 # Discussion
 
