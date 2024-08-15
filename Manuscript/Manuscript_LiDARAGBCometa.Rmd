@@ -51,6 +51,9 @@ set_flextable_defaults(
 
 knitr::knit_hooks$set(crop = knitr::hook_pdfcrop)
 
+# change figure units to cm
+chunkhooks::hook_figure_unit("cm")
+
 # Auto figure and table number
 figure_f = local({
   i = 0
