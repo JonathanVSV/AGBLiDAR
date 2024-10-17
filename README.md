@@ -2,7 +2,7 @@
 
 This repo contains the scripts to model AGB using LiDAR data and write its scientific article, all made in R.
 
-The repo contains two main folders: 
+The repo contains three main folders: 
 
 ## Scripts
 
@@ -38,3 +38,7 @@ This folder contains all the files required to make a word document of the artic
 4. international-journal-of-digital-earth. Is the file that indicates how the references should be formatted.
 
 5. Trackdown script to update files in Google Drive. This is a package that allows uploading an md and docx documents to drive.
+
+## Data
+
+1. BD_Joni_lidR_24. AGB data used in this study.
