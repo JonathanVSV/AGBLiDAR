@@ -27,7 +27,7 @@ fun<-function(...){
 # Make prediction
 pred_im <- raster::predict(im, 
                            model = rf_model$model, 
-                           fun=fun)
+                           fun = fun)
 # Write raster
 writeRaster(pred_im,
             paste0("AGB_pred/AGB_pred_rf_allroi.tif"),
@@ -36,14 +36,18 @@ writeRaster(pred_im,
 
 # Bootstrap split----
 
-# Gerar intervalos de confianza
-df <- read.csv(paste0("/Results/df_AGB.csv"))
-df_compl <- read.csv(paste0("/Data/BD_Joni_lidR_24.csv"))
-model_rf <- readRDS(paste0("/Results/Lista_bestmodel_rf_24.rds"))
+# Generar intervalos de confianza
+df <- read.csv(paste0(,"/Results/df_AGB.csv"))
+df_compl <- read.csv(paste0(,"/Data/BD_Joni_lidR_24.csv"))
+model_rf <- readRDS(paste0(,"/Results/Lista_bestmodel_rf_24.rds"))
+errors <- df <- read.csv(paste0(,"/Results/df_AGB2.csv"))
+
+# Linear model to estimate sd in terms of AGB
+modelerrs <- lm(sdAGB ~ AGB, data = errors)
 
 set.seed(27)
 boots <- bootstraps(df, 
-                    times = 100, 
+                    times = 1000, 
                     apparent = TRUE)
 
 df_boots <- map(1:nrow(boots), function(i){
@@ -60,16 +64,29 @@ df_boots <- map(1:nrow(boots), function(i){
 # Use model to make raster
 # Function for applying model to rasters and obtain a raster as results
 fun<-function(...){
-  p<-predict(...)
+  p <- predict(...)
+  
   return(as.matrix(as.numeric(p[, 1, drop=T]))) 
 }
 
-# 100 pred----
+# 1000 pred----
 # Make prediction
 walk(1:length(df_boots), function(i){
   pred_im <- raster::predict(im, 
                              model = df_boots[[i]], 
-                             fun=fun)
+                             fun = fun)
+  names(pred_im) <- "AGB"
+  pred_im_err <- raster::predict(pred_im,
+                                 model = modelerrs)
+  pred_im_err <- calc(pred_im_err, 
+                      function(x) if(!is.na(x)) {
+                        rnorm(sd = x, n = 1)
+                        }else{
+                          NA
+                        })
+  # Add error to prediction
+  pred_im <- pred_im + pred_im_err
+  
   # Write raster
   writeRaster(pred_im,
               paste0("AGB_pred/AGB_pred_rf_allroi_",i,".tif"),
@@ -78,6 +95,7 @@ walk(1:length(df_boots), function(i){
 })
 
 # CV----
+library(terra)
 im_cv <- list.files(paste0("AGB_pred/"),
            ".tif$",
            full.names = TRUE) |>
@@ -92,7 +110,7 @@ plot(mean_resul)
 plot(sd_resul)
 plot(cv_resul)
 
-# Enmascarar arbolado
+# Mask non-forest
 mascara <- orig_im$zmean[orig_im$zmean>=1.5, drop = FALSE]
 mascara <- rast(mascara)
 mascara <- project(mascara, mean_resul)
