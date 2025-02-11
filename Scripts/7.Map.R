@@ -499,6 +499,7 @@ mean_resul <- rast("AGB_boots/mean_resul.tif")
 sd_resul <- rast("AGB_boots/sd_resul.tif")
 cv_resul <- rast("AGB_boots/cv_resul.tif")
 
+# main map 1, mean AGB
 main_map <- tm_shape(mean_resul,
                      xlim = c(555000,558000),
                      ylim = c(2039500,2043000)) +
@@ -545,6 +546,7 @@ main_map <- tm_shape(mean_resul,
 
 main_map <- tmap_grob(main_map)
 
+# Secondary map, sd AGB
 sec_map <- tm_shape(cv_resul,
                      xlim = c(555000,558000),
                      ylim = c(2039500,2043000)) +
