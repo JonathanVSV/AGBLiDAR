@@ -39,6 +39,8 @@ golfo <- st_read("Shp/golforios.gpkg") |>
   st_transform(3857)
 oceanos <- st_read("Shp/oceanos.gpkg") |>
   st_transform(3857)
+secchannel <- st_read("Shp/secchannel.gpkg") |>
+  st_transform(3857)
 river <- st_sf(st_sfc(
   sf::st_linestring(
     matrix(c(-10286740,
@@ -120,6 +122,21 @@ main_map <- tm_shape(im2,
           fontfamily = "sans",
           shadow = TRUE
           ) +
+  tm_shape(secchannel) + 
+  tm_lines(col = "#185cee",
+           col.alpha = 0.9,
+           border.col = "#185cee",
+           border.alpha = 0.9,
+           lwd = 2) +
+  # tm_text("name", 
+  #         size = 0.6,
+  #         options = opt_tm_text(along_lines = TRUE),
+  #         just = c("center","top"),
+  #         alpha = 1,
+  #         col = "#185cee",
+  #         ymod = 0.1,
+  #         fontfamily = "sans"
+  # ) +
   tm_graticules(n.x = 3,
                 n.y = 3,
                 crs = "EPSG:4326",
@@ -135,7 +152,7 @@ main_map <- tm_shape(im2,
                 ticks = T,
                 lines = F) +
   tm_scalebar(breaks = seq(0,1,0.5),
-               position = c(-0.35, -0.23),
+               position = c(-0.07, 0.02),
                text.size = 0.65,
                lwd = 1,
                text.color = "white",
@@ -144,6 +161,10 @@ main_map <- tm_shape(im2,
                # just = "right",
                bg.color = "gray90",
                bg.alpha = 0) +
+  tm_compass(type = "arrow", 
+             text.size = 1,
+             size = 2,
+             position = c(-0.05, 1.05)) +
   tm_layout(legend.only = F,
             legend.show = F,
             legend.outside = F,
@@ -160,7 +181,6 @@ main_map <- tm_shape(im2,
             frame.lwd = 3)  
 main_map <- tmap_grob(main_map)
 
-# Create general location map
 inset_map <- tm_shape(World,
                      bbox = Mx |>
                        st_bbox())+
@@ -215,7 +235,6 @@ inset_map <- tm_shape(World,
 
 inset_map <- tmap_grob(inset_map)
 
-# Create zoomed location map
 inset_map2 <- tm_shape(LULC,
                        bbox = roi2 |>
                          st_buffer(-500) |>
@@ -304,14 +323,15 @@ texto <- text_grob(label = "WGS 84",
                    size = 8,
                    family = "sans") 
 
-# Legend for points
-legend_im <- tm_shape(splots |>
+legend_im <- 
+  tm_shape(splots |>
                         dplyr::mutate(Legend = "Sampling plots") |>
-                        dplyr::select(Legend) |>
+                        # dplyr::select(Legend) |>
                         dplyr::slice(1) |>
                         dplyr::ungroup()) +
   tm_dots(col = "Legend",
           fill_alpha = 0.95,
+          title = "B",
           size = 0.5,
           shape = 21,
           border.col = "#000000",
@@ -322,15 +342,33 @@ legend_im <- tm_shape(splots |>
           #                                value.null = NA),
           fill.legend = tm_legend("Legend",
                                   orientation = "Landscape",
+                                  show = TRUE,
                                   width = 20,
-                                  na.show = F)) + # +
+                                  na.show = F)) + # 
+  tm_shape(secchannel |>
+             mutate(`Water bodies` = "Secondary channel") |>
+             dplyr::slice(1)) + 
+  tm_lines(col = "Water bodies",
+           # col.scale = "#185cee",
+           col.scale = tm_scale_categorical(values = "#185cee",
+                            label.na = ""),
+           lwd = 2,
+           col.legend = tm_legend(title = "", 
+                                   # title.fontface = "normal",
+                                   text.size = 0.8,
+                                  # orientation = "Landscape",
+                                  width = 20,
+                                  na.show = FALSE,
+                                  item.width = 0.95)
+           # fill.legend = tm_legend(na.show = FALSE)
+           ) +
   tm_layout(legend.only = T,
             legend.outside = T,
             legend.text.size = 0.8,
             legend.title.color = "#000000",
             legend.text.color = "#000000",
             legend.outside.size = 0.5,
-            legend.frame = "#FFFFFF",
+            legend.frame = "#FFFFFF00",
             attr.outside = F,
             legend.outside.position = "right",
             # legend.position = c(0.1,0.7),
@@ -339,11 +377,11 @@ legend_im <- tm_shape(splots |>
             outer.margins = c(0.1),
             inner.margins = c(0.1),
             text.fontfamily = "sans",
-            legend.title.fontface = "bold")
+            legend.title.fontface = "bold",
+            component.autoscale = FALSE)
 
 legend_im <- tmap_grob(legend_im)
 
-# Legend for height raster
 legend_im2 <- tm_shape(im) +
   tm_raster(col = "zmax",
             palette = rev( RColorBrewer::brewer.pal(9,"Greys")),
@@ -360,7 +398,7 @@ legend_im2 <- tm_shape(im) +
             legend.text.size = 0.6,
             legend.title.color = "#000000",
             legend.text.color = "#000000",
-            legend.frame = "#FFFFFF",
+            legend.frame = "#FFFFFF00",
             legend.outside.size = 0.6,
             attr.outside = F,
             legend.outside.position = "bottom",
@@ -373,7 +411,6 @@ legend_im2 <- tm_shape(im) +
             legend.title.fontface = "bold")
 legend_im2 <- tmap_grob(legend_im2)
 
-# Legend for classification
 legend_im3 <- tm_shape(LULC,
                        bbox = roi2 |>
                          st_buffer(-500) |>
@@ -398,7 +435,7 @@ legend_im3 <- tm_shape(LULC,
             legend.text.size = 0.6,
             legend.title.color = "#000000",
             legend.text.color = "#000000",
-            legend.frame = "#FFFFFF",
+            legend.frame = "#FFFFFF00",
             legend.outside.size = 0.6,
             attr.outside = F,
             legend.outside.position = "bottom",
@@ -412,10 +449,9 @@ legend_im3 <- tm_shape(LULC,
 
 legend_im3 <- tmap_grob(legend_im3)
 
-# Join all plots
 exp_plot <- ggdraw(p1) +
   draw_plot(main_map,
-            x = -0.12,
+            x = -0.1,
             y = 0.0,
             hjust = 0,
             vjust = 0,
@@ -430,23 +466,23 @@ exp_plot <- ggdraw(p1) +
             height = 0.31) +
   draw_plot(inset_map2,
             x = 0.45,
-            y = 0.057,
+            y = 0.06,
             hjust = 0,
             vjust = 0,
             width = 0.80,
             height = 0.75) +
   # SAmpling plots
   draw_plot(legend_im,
-            x = 0.05,
-            y = -0.48,
+            x = 0.02,
+            y = -0.5,
             hjust = 0,
             vjust = 0,
             width = 0.5,
             height = 0.8) +
   # Height
   draw_plot(legend_im2,
-            x = 0.3,
-            y = -0.32,
+            x = 0.33,
+            y = -0.34,
             hjust = 0,
             vjust = 0,
             width = 0.1,
@@ -454,7 +490,7 @@ exp_plot <- ggdraw(p1) +
   # LULC
   draw_plot(legend_im3,
             x = 0.56,
-            y = -0.52,
+            y = -0.55,
             hjust = 0,
             vjust = 0,
             width = 0.5,
@@ -484,7 +520,6 @@ map1 <- image_border(map1, "#FFFFFF", "20x20")
 image_write(map1, 
             path = "Map/Map1.jpeg", 
             format = "jpeg")
-
 # Map2----
 library(cowplot)
 library(gridExtra)
@@ -542,11 +577,14 @@ main_map <- tm_shape(mean_resul,
                color.light = "white",
                # just = "right",
                bg.color = "gray90",
-               bg.alpha = 0)
+               bg.alpha = 0) +
+  tm_compass(type = "arrow", 
+             text.size = 1,
+             size = 1.5,
+             position = c(-0.05, 1.05))
 
 main_map <- tmap_grob(main_map)
 
-# Secondary map, sd AGB
 sec_map <- tm_shape(cv_resul,
                      xlim = c(555000,558000),
                      ylim = c(2039500,2043000)) +
@@ -589,7 +627,11 @@ sec_map <- tm_shape(cv_resul,
                color.light = "white",
                # just = "right",
                bg.color = "gray90",
-               bg.alpha = 0)
+               bg.alpha = 0) +
+  tm_compass(type = "arrow", 
+             text.size = 1,
+             size = 1.5,
+             position = c(-0.05, 1.05))
 sec_map <- tmap_grob(sec_map)
 
 # Create empty plot as base
@@ -640,4 +682,3 @@ map2 <- image_border(map2, "#FFFFFF", "20x20")
 image_write(map2, 
             path = "Map/Map2.jpeg", 
             format = "jpeg")
-
