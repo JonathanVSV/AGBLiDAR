@@ -16,31 +16,31 @@ Sys.setenv("PROJ_LIB" = prj)
 # Sys.setenv("PROJ_LIB" = plib)
 
 # Map1----
-
-# Read files
 splots <- st_read("Shape/27_Parcelas_rectangulos.shp") |>
   dplyr::filter(!parcela %in% c(9,26)) |>
-  st_centroid()
+  st_centroid() |>
+  st_transform(32615)
 cometa <- st_read("Shape/Cometa.gpkg") |>
-  st_transform(3857) |>
+  st_transform(32615) |>
   mutate(name = "Cometa\nLagoon") 
 World <- st_read("LimitesIntl/WorldWithoutMX.shp") |>
-  st_transform(3857)
+  st_transform(6372)
 Mx <- st_read("LimitesIntl/MX_inegi.shp")|>
-  st_transform(3857)
+  st_transform(6372)
 roi2 <- st_read("Shp/roi_inset2.gpkg")|>
   # st_buffer(2500) |>
-  st_transform(3857)
+  st_transform(6372)
 roilidar <- st_read("Shp/roi_lidar.gpkg")|>
-  st_transform(3857)
+  st_transform(32615)
 LULC <- st_read("Shp/polys_2.shp") |>
-  st_transform(3857)
+  st_transform(32615)
 golfo <- st_read("Shp/golforios.gpkg") |>
-  st_transform(3857)
+  st_transform(32615)
 oceanos <- st_read("Shp/oceanos.gpkg") |>
-  st_transform(3857)
+  st_transform(32615) |>
+  mutate(across(nombre, ~ifelse(.x == "Gulf of Mexico", "Gulf of\nMexico", .x)))
 secchannel <- st_read("Shp/secchannel.gpkg") |>
-  st_transform(3857)
+  st_transform(32615)
 river <- st_sf(st_sfc(
   sf::st_linestring(
     matrix(c(-10286740,
@@ -48,7 +48,8 @@ river <- st_sf(st_sfc(
              2101449,
              2112993.68), 2)),
   crs = 3857))|>
-  mutate(nombre = "San Pedro - San Pablo River")
+  mutate(nombre = "San Pedro - San Pablo River") |>
+  st_transform(32615)
 
 library(raster)
 
@@ -60,7 +61,9 @@ names(ims) <- NULL
 ims$fun <- "mean"
 ims$na.rm <- TRUE
 im <- do.call(mosaic,
-              ims)
+              ims) |>
+  raster::projectRaster(res = 10,
+                        crs = "EPSG:32615")
 names(im) <- c("zmax")
 
 plot(im[[1]])
@@ -70,25 +73,25 @@ roi <- splots |>
   st_as_sfc() |>
   st_as_sf() |>
   st_buffer(1000) |>
-  st_transform(3857)
+  st_transform(32615)
 
 splots <- splots |>
-  st_transform(3857)
+  st_transform(32615)
 
 splots2 <- splots |>
   st_buffer(500)
 
-# Download basemap
+# Bajar mapa base
 # base_im <- basemap_geotif(roi2,
 #                map_service = "esri",
 #                map_type = "world_imagery",
 #                map_dir = "Basemap")
 
 im1 <- rast("Basemap/basemap_20240723170715.357565.tif")
-im2 <- rast("Basemap/basemap_20240723172752.482039.tif")
+im2 <- rast("Basemap/basemap_20240723172752.482039.tif") |>
+  project("EPSG:32615")
 im3 <- rast("Basemap//basemap_20240812212358.276884.tif")
 
-# Create main map
 main_map <- tm_shape(im2,
          bbox = splots2 |>
            st_bbox()) +
@@ -152,7 +155,7 @@ main_map <- tm_shape(im2,
                 ticks = T,
                 lines = F) +
   tm_scalebar(breaks = seq(0,1,0.5),
-               position = c(-0.07, 0.02),
+               position = c(-0.34, -0.20),
                text.size = 0.65,
                lwd = 1,
                text.color = "white",
@@ -164,7 +167,8 @@ main_map <- tm_shape(im2,
   tm_compass(type = "arrow", 
              text.size = 1,
              size = 2,
-             position = c(-0.05, 1.05)) +
+             text.color = "white",
+             position = c(-0.32, 1.35)) +
   tm_layout(legend.only = F,
             legend.show = F,
             legend.outside = F,
@@ -449,6 +453,45 @@ legend_im3 <- tm_shape(LULC,
 
 legend_im3 <- tmap_grob(legend_im3)
 
+legend_im4 <- tm_shape(roilidar |>
+                         mutate(roi = "Study area")) + 
+  tm_borders(col = "roi",
+             col.scale = tm_scale_categorical(values = "firebrick2",
+                                              label.na = ""),
+             lwd = 2,
+            col.legend = tm_legend(title = "",
+                                   orientation = "portrait",
+                                   text.size = 0.8,
+                                   # orientation = "Landscape",
+                                   width = 20,
+                                   na.show = FALSE,
+                                   item.width = 0.95)
+             ) +
+  # tm_rgb(alpha = 1,
+  #        saturation = 1,
+  #        stretch.palette = TRUE,
+  #        title = "Mean height\n(m)",
+  #        legend.reverse = TRUE) +
+  tm_layout(legend.only = T,
+            legend.outside = T,
+            legend.title.size = 0.8,
+            legend.text.size = 0.6,
+            legend.title.color = "#000000",
+            legend.text.color = "#000000",
+            legend.frame = "#FFFFFF00",
+            legend.outside.size = 0.6,
+            attr.outside = F,
+            legend.outside.position = "bottom",
+            # legend.position = c(0.1,0.7),
+            # attr.position = c(1.2, -0.05),
+            between.margin = c(0),
+            outer.margins = c(0.1),
+            inner.margins = c(0.1),
+            fontfamily = "sans",
+            legend.title.fontface = "bold")
+
+legend_im4 <- tmap_grob(legend_im4)
+
 exp_plot <- ggdraw(p1) +
   draw_plot(main_map,
             x = -0.1,
@@ -466,7 +509,7 @@ exp_plot <- ggdraw(p1) +
             height = 0.31) +
   draw_plot(inset_map2,
             x = 0.45,
-            y = 0.06,
+            y = 0.065,
             hjust = 0,
             vjust = 0,
             width = 0.80,
@@ -481,7 +524,7 @@ exp_plot <- ggdraw(p1) +
             height = 0.8) +
   # Height
   draw_plot(legend_im2,
-            x = 0.33,
+            x = 0.30,
             y = -0.34,
             hjust = 0,
             vjust = 0,
@@ -489,21 +532,28 @@ exp_plot <- ggdraw(p1) +
             height = 0.8) +
   # LULC
   draw_plot(legend_im3,
-            x = 0.56,
+            x = 0.50,
             y = -0.55,
             hjust = 0,
             vjust = 0,
             width = 0.5,
             height = 0.9) +
+  draw_plot(legend_im4,
+            x = 0.72,
+            y = -0.59,
+            hjust = 0,
+            vjust = 0,
+            width = 0.5,
+            height = 0.9) +
   draw_plot(texto,
-            x = 0.765,
-            y = -0.04,
+            x = 0.815,
+            y = -0.026,
             hjust = 0,
             vjust = 0,
             width = 0.2,
             height = 0.2)
 
-exp_plot
+# exp_plot
 
 save_plot(exp_plot,
           # asp = 1.5,
@@ -520,6 +570,7 @@ map1 <- image_border(map1, "#FFFFFF", "20x20")
 image_write(map1, 
             path = "Map/Map1.jpeg", 
             format = "jpeg")
+
 # Map2----
 library(cowplot)
 library(gridExtra)
