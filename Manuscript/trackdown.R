@@ -2,7 +2,7 @@ library(trackdown)
 
 # upload_file("Manuscript/Manuscript_LiDARAGBCometa.Rmd",
 #             hide_code = TRUE,
-#             path_output = "D:/Drive/Jonathan_trabaggio/Doctorado/R/CometaLiDARrevML/Manuscript/Manuscript_LiDARAGBCometa.docx")
+#             path_output = "Manuscript/Manuscript_LiDARAGBCometa.docx")
 
 # Para subir el archivo a Google Drive
 update_file("Manuscript/Manuscript_LiDARAGBCometa.Rmd",
