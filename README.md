@@ -2,9 +2,11 @@
 
 This repo contains the scripts to model AGB using LiDAR data and the files to build the article reporting the findings (including the manuscript, maps, and figures). Everything was performed in R.
 
+The complete article can be consulted here: [Mapping Tropical Forested Wetlands Biomass with LiDAR: A Machine Learning Comparison](https://doi.org/10.3390/rs17061076)
+
 The repo contains three main folders: 
 
-## Scripts
+## 1. Scripts
 
 This folder contains all the processing steps:
 
@@ -25,7 +27,7 @@ This folder contains all the processing steps:
 
 7. Map. Create maps of the study site and AGB prediction for the complete study area.
 
-## Manuscript
+## 2. Manuscript
 
 This folder contains all the files required to make a word document of the article, using RMarkdown and RStudio.
 
@@ -39,6 +41,6 @@ This folder contains all the files required to make a word document of the artic
 
 5. Trackdown script to update files in Google Drive. This is a package that allows uploading an md and docx documents to drive.
 
-## Data
+## 3. Data
 
 1. BD_Joni_lidR_24. Contains the AGB data used in this study.
