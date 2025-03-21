@@ -8,7 +8,7 @@ output:
     # Agergar este exe en el folder de pandoc pa manejar cross references
     pandoc_args: ["-Fpandoc-crossref"]
 bibliography: Library.bib
-csl: international-journal-of-digital-earth.csl
+csl: remote-sensing.csl
 editor_options: 
   markdown: 
     wrap: 72
