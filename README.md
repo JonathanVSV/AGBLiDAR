@@ -44,3 +44,7 @@ This folder contains all the files required to make a word document of the artic
 ## 3. Data
 
 1. BD_Joni_lidR_24. Contains the AGB data used in this study.
+
+A preview of the final predictions:
+
+![AGBD prediction on entire LiDAR footprint](img/Map2.jpeg)
