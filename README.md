@@ -2,7 +2,8 @@
 
 This repo contains the scripts to model AGB using LiDAR data and the files to build the article reporting the findings (including the manuscript, maps, and figures). Everything was performed in R.
 
-The complete article can be consulted here: [Mapping Tropical Forested Wetlands Biomass with LiDAR: A Machine Learning Comparison](https://doi.org/10.3390/rs17061076)
+The complete article can be consulted here: Solórzano, J.V., Peralta-Carreta, C., Gallardo-Cruz, J.A. 2025. Mapping Tropical Forested Wetlands Biomass with LiDAR: A Machine
+Learning Comparison. Remote Sensing 17, 1076. [https://doi.org/10.3390/rs17061076](https://doi.org/10.3390/rs17061076)
 
 The repo contains three main folders: 
 
